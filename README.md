@@ -28,3 +28,5 @@ Sortarea se face dupa id-ul obiectelor de tip Queryable.
 
 Clasa Service expune cateva functii simple: de adaugare si de afisare. In etapele urmatoare voi adauga si stergere si updatare.
 Clasa Main evidentiaza functiile din Service.
+
+![Working Penguin](https://media.giphy.com/media/KEkCtOMhkdze5azTMa/giphy.gif)
