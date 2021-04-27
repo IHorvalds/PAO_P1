@@ -27,3 +27,5 @@ Sortarea se face dupa id-ul obiectelor de tip Queryable.
 
 Clasa Service expune cateva functii simple: de adaugare, de afisare, de incarcare a obiectelor scrise pe disc, de scriere si citire a obiectelor.
 Clasa Main evidentiaza functiile din Service.
+
+![Working Penguin](https://media.giphy.com/media/KEkCtOMhkdze5azTMa/giphy.gif)
