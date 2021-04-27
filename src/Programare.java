@@ -6,7 +6,15 @@ public class Programare extends Queryable {
     private Integer clientId, medicId;
     private Date appointmentDate;
 
+    static Integer lastId = 0;
+
+    public Programare() {
+        Queryable.addNewStore(Programare.class);
+    }
+
     public Programare(Client c, Medic m, Date d) {
+        this.id                 = lastId;
+        lastId                  += 1;
         this.clientId           = c.id;
         this.medicId            = m.id;
         this.appointmentDate    = d;
@@ -24,10 +32,10 @@ public class Programare extends Queryable {
         System.out.print("Nume sau prenume medic: ");
         _medicName = Queryable.sc.nextLine();
 
-        System.out.print("Data programarii (DD-MM-YYYY hh:mm): ");
+        System.out.print("Data programarii (DD-MM-YYYY HH:mm): ");
         _dateString = Queryable.sc.nextLine();
 
-        DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm");
+        DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm");
         try {
             _date = formatter.parse(_dateString);
         } catch (ParseException e) {
@@ -47,7 +55,7 @@ public class Programare extends Queryable {
     }
 
     public void print() {
-        DateFormat formatter = new SimpleDateFormat("dd.MM.yyyy hh:mm");
+        DateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm");
         System.out.println("Programare pe data " + formatter.format(appointmentDate));
         System.out.println("-------------------------------------------------------");
         System.out.println("Pacient: \t" + getClient().getFullName());
@@ -79,6 +87,6 @@ public class Programare extends Queryable {
     public void setAppointDate(Date newDate) {
         appointmentDate = newDate;
 
-        Programare.update(this, Programare.class);
+        Programare.update(this);
     }
 }

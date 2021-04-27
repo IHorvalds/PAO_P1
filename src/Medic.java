@@ -4,6 +4,10 @@ public class Medic extends Queryable {
 
     static Integer lastId = 0;
 
+    public Medic() {
+        Queryable.addNewStore(Medic.class);
+    }
+
     public Medic(String firstName, String lastName, String phoneString, String email,
                  Integer start, Integer end, Integer cabinet) {
         this.id = lastId;
@@ -65,7 +69,7 @@ public class Medic extends Queryable {
 
     public void setFirstName(String newFirstName) {
         this.firstName = newFirstName;
-        Medic.update(this, Medic.class);
+        Medic.update(this);
     }
 
     public String getLastName() {
@@ -74,7 +78,7 @@ public class Medic extends Queryable {
 
     public void setLastName(String newLastName) {
         this.lastName = newLastName;
-        Medic.update(this, Medic.class);
+        Medic.update(this);
     }
 
     public String getFullName() {
@@ -87,7 +91,7 @@ public class Medic extends Queryable {
 
     public void setPhoneNumber(String newPhoneNumber) {
         this.phoneNumber = newPhoneNumber;
-        Medic.update(this, Medic.class);
+        Medic.update(this);
     }
 
     public String getEmail() {
@@ -96,7 +100,7 @@ public class Medic extends Queryable {
 
     public void setEmail(String newEmail) {
         this.email = newEmail;
-        Medic.update(this, Medic.class);
+        Medic.update(this);
     }
 
     public Integer getStartingTime() {
@@ -105,7 +109,7 @@ public class Medic extends Queryable {
 
     public void setStartingTime(Integer newStartingTime) {
         this.startingHour = newStartingTime;
-        Medic.update(this, Medic.class);
+        Medic.update(this);
     }
 
     public Integer getLastHour() {
@@ -114,7 +118,7 @@ public class Medic extends Queryable {
 
     public void setEndingTime(Integer newEndTime) {
         this.endOfDay = newEndTime;
-        Medic.update(this, Medic.class);
+        Medic.update(this);
     }
 
     public Integer getScheduleLength() {
@@ -127,6 +131,6 @@ public class Medic extends Queryable {
 
     public void setCabinetNumber(Integer newCabinet) {
         this.cabinetNumber = newCabinet;
-        Medic.update(this, Medic.class);
+        Medic.update(this);
     }
 }

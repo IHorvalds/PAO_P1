@@ -22,9 +22,8 @@ I really really __really__ ~hate~ love Java...
 Pentru fiecare clasa din model (Medic, Client, Programare)
 
 Toate modelele mostenesc Queryable. Queryable tine evidenta tuturor Store-urilor pentru clasele de Modele.
-Atunci cand o clasas Model noua este adaugata (in cod), un store va fi creat pentru ea cand va fi instantiata prima data.
-Persistenta nu e implementata. 
+Atunci cand o clasa Model noua este adaugata (in cod), un store va fi creat pentru ea cand va fi instantiata prima data. 
 Sortarea se face dupa id-ul obiectelor de tip Queryable.
 
-Clasa Service expune cateva functii simple: de adaugare si de afisare. In etapele urmatoare voi adauga si stergere si updatare.
+Clasa Service expune cateva functii simple: de adaugare, de afisare, de incarcare a obiectelor scrise pe disc, de scriere si citire a obiectelor.
 Clasa Main evidentiaza functiile din Service.

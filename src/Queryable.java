@@ -1,4 +1,9 @@
+import java.io.*;
+import java.lang.reflect.*;
+import java.text.*;
 import java.util.*;
+import java.util.stream.Stream;
+
 import errors.ObjectNotFound;
 
 public abstract class Queryable implements Comparable<Queryable> {
@@ -6,7 +11,7 @@ public abstract class Queryable implements Comparable<Queryable> {
     static Hashtable<Class, Store> _stores = new Hashtable<Class, Store>();
     static <T extends Queryable> void addNewStore(Class<T> cls) {
         if (!_stores.containsKey(cls)) {
-            _stores.put(cls, new Store<T>(cls));
+            _stores.put(cls, new Store<T>());
         }
     }
 
@@ -19,61 +24,216 @@ public abstract class Queryable implements Comparable<Queryable> {
 
     static protected Scanner sc = new Scanner(System.in); 
 
-    public static <T extends Queryable> void insert(T ob, Class<T> cls) {
-        var _store = _stores.get(cls).store;
-        if (_store != null) {
-            Integer n = _store.length;
-            _store = Arrays.copyOf(_store, n + 1);
-            _store[n] = ob;
-            _stores.get(cls).store = _store;
-        } else {
-            _store = new Queryable[1];
-            _store[0] = ob;
-            _stores.get(cls).store = _store;
-        }
+    public static <T extends Queryable> void insert(T ob) {
+        Class<T> cls = (Class<T>)ob.getClass();
+        Store<T> _store = (Store<T>)_stores.get(cls);
+        _store.getStore().add(ob);
     }
 
     public static <T extends Queryable> T get(Integer id, Class<T> cls) {
-        var _store = _stores.get(cls).store;
-        for(var ob : _store) {
-            if (ob.id == id) {
-                return (T)ob;
+        Store<T> _store = (Store<T>)_stores.get(cls);
+
+        if (_store != null) {
+            for(var ob : _store.getStore()) {
+                if (ob.id == id) {
+                    return ob;
+                }
             }
         }
         throw new ObjectNotFound("No object with id " + id);
     }
 
-    public static <T extends Queryable> void update(T new_object, Class<T> cls) {
-        var _store = _stores.get(cls).store;
-        for(var ob : _store) {
-            if (ob.id == new_object.id) {
-                ob = new_object;
+    public static <T extends Queryable> void update(T new_object) {
+        Class<T> cls = (Class<T>)new_object.getClass();
+        Store<T> _store = (Store<T>)_stores.get(cls);
+
+        if (_store != null) {
+            for(var ob : _store.getStore()) {
+                if (ob.id == new_object.id) {
+                    ob = new_object;
+                }
             }
+            throw new ObjectNotFound("No object with id " + new_object.id + ". Try inserting the object.");
         }
-        throw new ObjectNotFound("No object with id " + new_object.id + ". Try inserting the object.");
     }
 
-    public static <T extends Queryable> void delete(T ob, Class<T> cls) {
-        var _store = _stores.get(cls).store;
-        Queryable[] new_store = new Queryable[_store.length - 1];
+    public static <T extends Queryable> void delete(T ob) {
+        Class<T> cls = (Class<T>)ob.getClass();
+        Store<T> _store = _stores.get(cls);
 
-        Integer i = 0;
-        for(var o : _store) {
-            if (o.id != ob.id) {
-                new_store[i] = o;
-                i++;
-            }
+        if (_store != null) {
+            _store.getStore().remove(ob);
         }
-
-        _stores.get(cls).store = new_store;
     }
 
     public static <T extends Queryable> T[] getAll(Class<T> cls) {
-        var _store = _stores.get(cls).store;
-        return (T[])Arrays.copyOf(_store, _store.length);
+        Store<T> _store = (Store<T>)_stores.get(cls);
+
+        if (_store != null) {
+            return _store.getStoreAsArray(cls);
+        }
+
+        return (T[])Array.newInstance(cls, 0);
     }
 
-    // abstract public String serialize();
 
-    // abstract public void save();
+    // turn object into comma separated string
+    public static <T extends Queryable> String serialize(T ob) {
+
+        Class<T> cls = (Class<T>)ob.getClass();
+        ArrayList<Field> allFields = new ArrayList<Field>();
+        try {
+            allFields.add(Queryable.class.getDeclaredField("id"));
+        } catch (NoSuchFieldException e1) {
+            e1.printStackTrace();
+        } catch (SecurityException e1) {
+            e1.printStackTrace();
+        }
+        allFields.addAll(new ArrayList<Field>(Arrays.asList(cls.getDeclaredFields())));
+        
+
+
+        String[] allValues = allFields.stream()
+                                .filter(f -> (f.getModifiers() != Modifier.STATIC))
+                                .map(f -> {
+            try {
+                f.setAccessible(true);
+
+                if (f.getType() == Date.class) {
+                    DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+                    return formatter.format(f.get(ob));
+                }
+
+                return f.get(ob).toString();
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+                return "";
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                return "";
+            }
+        }).toArray(String[]::new);
+
+        String str = String.join(",", allValues);
+
+        return str;
+    }
+
+    // turn comma separated string into object. If the object id > the lastId of the class, update that to
+    public static <T extends Queryable> T deserialize(Class<T> cls, String s) throws IllegalArgumentException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException {
+        ArrayList<Field> allFields = new ArrayList<Field>();
+        try {
+            allFields.add(Queryable.class.getDeclaredField("id"));
+        } catch (NoSuchFieldException e1) {
+            e1.printStackTrace();
+        } catch (SecurityException e1) {
+            e1.printStackTrace();
+        }
+        allFields.addAll(new ArrayList<Field>(Arrays.asList(cls.getDeclaredFields())));
+
+        Field[] fields = allFields.stream().filter(f -> (f.getModifiers() != Modifier.STATIC)).toArray(Field[]::new);
+
+
+        String[] allValues = s.split(",");
+
+        assert(fields.length == allValues.length) : "Different number of fields for instance of " + cls.getSimpleName();
+
+        T ob = cls.getDeclaredConstructor().newInstance();
+
+        for(Integer i = 0; i < fields.length; ++i) {
+            Field f = fields[i];
+            f.setAccessible(true);
+
+            switch (f.getType().getSimpleName())
+            {
+                case "String":
+                f.set(ob, allValues[i]);
+                break;
+
+                case "Double":
+                Double d = Double.valueOf(allValues[i]);
+                f.set(ob, d);
+                break;
+
+                case "Integer":
+                Integer integer = Integer.valueOf(allValues[i]);
+                f.set(ob, integer);
+                break;
+
+                case "Date":
+                DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+                try {
+                    f.set(ob, formatter.parse(allValues[i]));
+                } catch (Exception e) {
+                    f.set(ob, null);
+                }
+                break;
+            }            
+
+        }
+
+        try {
+            Field f = cls.getDeclaredField("lastId");
+            if (ob.id >= (Integer)f.get(ob)) {
+                f.set(ob, ob.id + 1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return ob;
+    }
+
+
+    private static void write_out(File f, String buff, Boolean overwrite) {
+        
+        try (FileWriter fw = new FileWriter(f, !overwrite)) {
+            fw.write(buff);
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static <T extends Queryable> void saveAll(Class<T> cls) {
+        T[] arr = T.getAll(cls);
+
+        File f = new File(System.getProperty("user.dir") + "/data/" + cls.getSimpleName() + ".csv");
+        
+        if (!f.exists()) {
+            try {
+                f.getParentFile().mkdirs();
+                f.createNewFile();
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+            write_out(f, "", true);
+        } else {
+            write_out(f, "", true);
+        }
+        for(T el : arr) {
+            String s = T.serialize(el);
+            write_out(f, s + "\n", false);
+        }
+    }
+
+    public static <T extends Queryable> void readAll(Class<T> cls) throws Exception {
+        File f = new File(System.getProperty("user.dir") + "/data/" + cls.getSimpleName() + ".csv");
+
+        if (f.exists()) {
+            try {
+                Scanner fileScanner = new Scanner(f);
+
+                while(fileScanner.hasNextLine()) {
+                    String s = fileScanner.nextLine();
+                    T ob = T.deserialize(cls, s);
+                    T.insert(ob);
+                }
+
+                fileScanner.close();
+                fileScanner = null;
+            } catch (Exception e) {
+                throw e;
+            }
+        }
+    }
 }
