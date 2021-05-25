@@ -1,3 +1,4 @@
+package deprecated;
 public class Medic extends Queryable {
     private String lastName, firstName, phoneNumber, email;
     private Integer startingHour, endOfDay, cabinetNumber;

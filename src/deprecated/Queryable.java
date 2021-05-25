@@ -1,8 +1,8 @@
+package deprecated;
 import java.io.*;
 import java.lang.reflect.*;
 import java.text.*;
 import java.util.*;
-import java.util.stream.Stream;
 
 import errors.ObjectNotFound;
 
